@@ -1,0 +1,4 @@
+[
+  {"ticket_id": "INC-1001", "employee_id": "EMP1024", "title": "Laptop will not start", "description": "Laptop shows a blank screen after power on.", "status": "In progress", "priority": "High"},
+  {"ticket_id": "INC-1002", "employee_id": "EMP2048", "title": "VPN access issue", "description": "VPN disconnects during sign-in.", "status": "Waiting for user", "priority": "Medium"}
+]
