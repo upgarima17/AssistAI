@@ -129,14 +129,15 @@ def initialize_database() -> None:
                 for ticket in tickets
             ]
             if using_postgres():
-                connection.executemany(
-                    """INSERT INTO tickets
-                    (ticket_id, employee_id, title, description, status, priority, created_at)
-                    VALUES (%(ticket_id)s, %(employee_id)s, %(title)s, %(description)s,
-                            %(status)s, %(priority)s, %(created_at)s)
-                    ON CONFLICT (ticket_id) DO NOTHING""",
-                    ticket_rows,
-                )
+                with connection.cursor() as cursor:
+                    cursor.executemany(
+                        """INSERT INTO tickets
+                        (ticket_id, employee_id, title, description, status, priority, created_at)
+                        VALUES (%(ticket_id)s, %(employee_id)s, %(title)s, %(description)s,
+                                %(status)s, %(priority)s, %(created_at)s)
+                        ON CONFLICT (ticket_id) DO NOTHING""",
+                        ticket_rows,
+                    )
             else:
                 connection.executemany(
                     """INSERT OR IGNORE INTO tickets
@@ -149,12 +150,13 @@ def initialize_database() -> None:
         if employee_count == 0 and EMPLOYEES_SEED_PATH.exists():
             employees = json.loads(EMPLOYEES_SEED_PATH.read_text(encoding="utf-8"))
             if using_postgres():
-                connection.executemany(
-                    """INSERT INTO employees (employee_id, name, department)
-                    VALUES (%(employee_id)s, %(name)s, %(department)s)
-                    ON CONFLICT (employee_id) DO NOTHING""",
-                    employees,
-                )
+                with connection.cursor() as cursor:
+                    cursor.executemany(
+                        """INSERT INTO employees (employee_id, name, department)
+                        VALUES (%(employee_id)s, %(name)s, %(department)s)
+                        ON CONFLICT (employee_id) DO NOTHING""",
+                        employees,
+                    )
             else:
                 connection.executemany(
                     """INSERT OR IGNORE INTO employees (employee_id, name, department)
