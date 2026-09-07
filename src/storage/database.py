@@ -111,7 +111,10 @@ def get_connection() -> Any:
 def initialize_database() -> None:
     with get_connection() as connection:
         if using_postgres():
-            connection.execute(POSTGRES_SCHEMA)
+            for statement in POSTGRES_SCHEMA.split(";"):
+                statement = statement.strip()
+                if statement:
+                    connection.execute(statement)
         else:
             connection.executescript(SCHEMA)
         ticket_count_row = connection.execute("SELECT COUNT(*) AS count FROM tickets").fetchone()

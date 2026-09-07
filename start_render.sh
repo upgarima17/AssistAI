@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
 set -eu
 
-uvicorn api:app --app-dir src --host 127.0.0.1 --port 8000 &
+api_log=/tmp/assistai-api.log
+uvicorn api:app --app-dir src --host 127.0.0.1 --port 8000 >"$api_log" 2>&1 &
 api_pid=$!
 
 cleanup() {
@@ -9,7 +10,7 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-python - <<'PY'
+if ! python - <<'PY'
 import sys
 import time
 import urllib.request
@@ -24,5 +25,10 @@ for _ in range(30):
 else:
     sys.exit("FastAPI did not become ready on port 8000")
 PY
+then
+    echo "FastAPI startup failed. Uvicorn log:" >&2
+    cat "$api_log" >&2 || true
+    exit 1
+fi
 
 exec streamlit run streamlit/streamlit_app.py --server.address 0.0.0.0 --server.port "$PORT" --server.headless true --server.enableCORS false --server.enableXsrfProtection false
