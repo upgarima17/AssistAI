@@ -3,13 +3,13 @@
     "id": "KB-001",
     "title": "Reset your VPN password",
     "keywords": ["vpn", "password", "reset", "remote access"],
-    "content": "Open the AssistAI VPN portal, choose Forgot password, verify with your employee ID, and set a new password. If verification fails, contact the IT Service Desk."
+    "content": "Open the AssistIQ VPN portal, choose Forgot password, verify with your employee ID, and set a new password. If verification fails, contact the IT Service Desk."
   },
   {
     "id": "KB-002",
     "title": "Connect to office Wi-Fi",
     "keywords": ["wifi", "wi-fi", "wireless", "network", "internet"],
-    "content": "Select the AssistAI-Staff network, sign in with your organization credentials, and accept the device registration prompt. Restart Wi-Fi if the network does not appear."
+    "content": "Select the AssistIQ-Staff network, sign in with your organization credentials, and accept the device registration prompt. Restart Wi-Fi if the network does not appear."
   },
   {
     "id": "KB-003",

@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "assistiq"
+version = "0.1.0"
+description = "FastAPI and LangGraph services for AssistIQ"
+requires-python = ">=3.11"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["rag*", "storage*"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["api", "config", "graph", "tools"]
