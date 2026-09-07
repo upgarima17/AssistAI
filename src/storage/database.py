@@ -139,12 +139,16 @@ def initialize_database() -> None:
                         ticket_rows,
                     )
             else:
-                connection.executemany(
-                    """INSERT OR IGNORE INTO tickets
-                    (ticket_id, employee_id, title, description, status, priority, created_at)
-                    VALUES (:ticket_id, :employee_id, :title, :description, :status, :priority, :created_at)""",
-                    ticket_rows,
-                )
+                cursor = connection.cursor()
+                try:
+                    cursor.executemany(
+                        """INSERT OR IGNORE INTO tickets
+                        (ticket_id, employee_id, title, description, status, priority, created_at)
+                        VALUES (:ticket_id, :employee_id, :title, :description, :status, :priority, :created_at)""",
+                        ticket_rows,
+                    )
+                finally:
+                    cursor.close()
         employee_count_row = connection.execute("SELECT COUNT(*) AS count FROM employees").fetchone()
         employee_count = employee_count_row["count"] if using_postgres() else employee_count_row[0]
         if employee_count == 0 and EMPLOYEES_SEED_PATH.exists():
@@ -158,11 +162,15 @@ def initialize_database() -> None:
                         employees,
                     )
             else:
-                connection.executemany(
-                    """INSERT OR IGNORE INTO employees (employee_id, name, department)
-                    VALUES (:employee_id, :name, :department)""",
-                    employees,
-                )
+                cursor = connection.cursor()
+                try:
+                    cursor.executemany(
+                        """INSERT OR IGNORE INTO employees (employee_id, name, department)
+                        VALUES (:employee_id, :name, :department)""",
+                        employees,
+                    )
+                finally:
+                    cursor.close()
 
 
 def row_to_dict(row: Any | None) -> dict[str, Any] | None:

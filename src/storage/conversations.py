@@ -43,9 +43,22 @@ def save_state(thread_id: str, state: dict[str, Any]) -> None:
                 (thread_id, employee_id, json.dumps(state)),
             )
             connection.execute("DELETE FROM messages WHERE thread_id = ?", (thread_id,))
-        connection.executemany(
-            "INSERT INTO messages(thread_id, role, content) VALUES (%s, %s, %s)"
-            if using_postgres()
-            else "INSERT INTO messages(thread_id, role, content) VALUES (?, ?, ?)",
-            [(thread_id, message["role"], message["content"]) for message in state.get("messages", [])],
-        )
+        message_rows = [
+            (thread_id, message["role"], message["content"])
+            for message in state.get("messages", [])
+        ]
+        if using_postgres():
+            with connection.cursor() as cursor:
+                cursor.executemany(
+                    "INSERT INTO messages(thread_id, role, content) VALUES (%s, %s, %s)",
+                    message_rows,
+                )
+        else:
+            cursor = connection.cursor()
+            try:
+                cursor.executemany(
+                    "INSERT INTO messages(thread_id, role, content) VALUES (?, ?, ?)",
+                    message_rows,
+                )
+            finally:
+                cursor.close()
