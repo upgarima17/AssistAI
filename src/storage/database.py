@@ -9,7 +9,7 @@ from typing import Any
 
 from utils.config_loader import DATA_DIR
 
-DATABASE_PATH = DATA_DIR / "AssistIQ.sqlite3"
+DATABASE_PATH = DATA_DIR / "assistai.sqlite3"
 LEGACY_TICKETS_PATH = DATA_DIR / "tickets.json"
 LEGACY_EMPLOYEES_PATH = DATA_DIR / "employees.json"
 

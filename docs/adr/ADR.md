@@ -28,6 +28,10 @@ Use the following boundaries:
 
 RAG is not used for ticket status, employee identity, authorization, or ticket creation. Those operations require structured lookups and validation.
 
+### Embedding retrieval
+
+The knowledge-search boundary uses `OpenAIEmbeddings` with a local FAISS vector index. The index is built lazily and persisted under `.assistai_faiss/`; a corpus and embedding-model fingerprint causes it to be rebuilt when either input changes. This provides semantic matching while keeping graph consumers independent of the vector-store implementation. The first index build requires `OPENAI_API_KEY` and network access. FAISS distance scores are returned as opaque numeric ranking metadata and are not compared with the previous lexical scores.
+
 ## Structure
 
 ```text

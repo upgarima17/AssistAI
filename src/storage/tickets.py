@@ -25,9 +25,22 @@ def find_tickets(employee_id: str, ticket_id: str = "", query: str = "") -> list
     return [dict(row) for row in rows]
 
 
+def _software_application_names(text: str) -> set[str]:
+    """Extract application names from software ticket titles and descriptions."""
+    names = set()
+    patterns = (
+        r"\bapplication(?: name)?\s*[:=-]\s*(.+?)(?=\s*(?:business reason|device(?: name)?)\s*[:=-]|$)",
+        r"\bsoftware installation(?: request)?\s*(?:for|:)\s*([^;\n]+)",
+    )
+    for pattern in patterns:
+        names.update(match.strip(" \t,;.").lower() for match in re.findall(pattern, text, re.IGNORECASE))
+    return names
+
+
 def find_relevant_open_ticket(employee_id: str, problem: str) -> dict[str, Any] | None:
     """Find an open ticket for an employee that shares meaningful problem terms."""
     stop_words = {"about", "again", "and", "help", "issue", "please", "problem", "ticket", "the", "with"}
+    software_markers = {"application", "install", "installation", "software"}
     problem_terms = {
         term for term in re.findall(r"[a-z0-9]+", problem.lower())
         if len(term) >= 4 and term not in stop_words
@@ -39,7 +52,17 @@ def find_relevant_open_ticket(employee_id: str, problem: str) -> dict[str, Any] 
     for ticket in tickets:
         if ticket["status"] in {"Resolved", "Closed"}:
             continue
-        ticket_terms = set(re.findall(r"[a-z0-9]+", f"{ticket['title']} {ticket['description']}".lower()))
+        ticket_text = f"{ticket['title']} {ticket['description']}".lower()
+        ticket_terms = set(re.findall(r"[a-z0-9]+", ticket_text))
+        ticket_is_software = bool(software_markers & ticket_terms)
+        problem_is_software = bool(software_markers & problem_terms)
+        if ticket_is_software != problem_is_software:
+            continue
+        if problem_is_software:
+            problem_applications = _software_application_names(problem)
+            ticket_applications = _software_application_names(ticket_text)
+            if problem_applications and ticket_applications and problem_applications.isdisjoint(ticket_applications):
+                continue
         if problem_terms & ticket_terms:
             return ticket
     return None

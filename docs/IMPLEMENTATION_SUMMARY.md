@@ -65,9 +65,9 @@ The tools are implemented as LangChain tools, so they can later be connected to 
 
 ### RAG knowledge search
 
-The RAG boundary is in `src/rag/retriever.py`. It currently uses lightweight local lexical retrieval over `data/knowledge_base.json`. It returns the matching article, source ID, and score in a shape that can later be backed by embeddings and a vector store.
+The RAG boundary is in `src/rag/retriever.py`. It uses OpenAI embeddings with a local FAISS index built from `data/knowledge_base.json`. The index is created lazily on the first knowledge query, stored in `.assistai_faiss/`, and rebuilt when the corpus or configured embedding model changes. Retrieval returns the original article fields, source ID, and FAISS distance score, excluding results above the configurable `RAG_SCORE_THRESHOLD` distance cutoff.
 
-This keeps the project offline and easy to run while leaving a clear upgrade path to Chroma, FAISS, or SQLite with vector support. Knowledge responses include their source IDs, and the assistant reports when no relevant article is found.
+The first embedding query requires network access and `OPENAI_API_KEY`; subsequent process calls reuse the in-memory index, and subsequent runs can load the persisted index. Knowledge responses include their source IDs, and the assistant reports when no relevant article is found. RAG remains limited to unstructured IT guidance; tickets and employee data use structured storage.
 
 ### LLM utility
 

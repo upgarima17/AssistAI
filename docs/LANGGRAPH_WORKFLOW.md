@@ -53,7 +53,7 @@ Vague follow-ups are not sent to the extractor. This allows a request such as `s
 
 ### `knowledge_search`
 
-`run_knowledge_search()` calls the local knowledge-search tool. The result contains matching articles and source IDs. The response node uses only those retrieved results when constructing a knowledge response.
+`run_knowledge_search()` calls the local knowledge-search tool. The retriever uses OpenAI embeddings with a lazily built, persisted FAISS index over `data/knowledge_base.json`. The result contains matching articles, source IDs, and vector distance scores. The response node uses only those retrieved results when constructing a knowledge response.
 
 ### `ticket_lookup`
 

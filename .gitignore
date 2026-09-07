@@ -23,3 +23,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 *.sqlite3
+
+# Generated local vector index
+.assistai_faiss/

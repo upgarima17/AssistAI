@@ -81,7 +81,7 @@ def decide_intent(state: SupportState) -> dict[str, Any]:
         phrase in lowered
         for phrase in ("new ticket", "new incident", "new request", "need a ticket", "want a ticket")
     )
-    if creation_request or action_only_creation:
+    if software_request or creation_request or action_only_creation:
         updates["intent"] = "create"
         if is_fresh_ticket_request(query):
             updates.update({
@@ -153,10 +153,13 @@ def run_ticket_creation(state: SupportState) -> dict[str, Any]:
         "business_reason": state.get("business_reason", "").strip() or software_request.get("business_reason", "").strip(),
         "device_name": state.get("device_name", "").strip() or software_request.get("device_name", "").strip(),
     }
-    if any(software_fields.values()) and not all(software_fields.values()):
+    software_request_started = bool(
+        software_fields["application_name"] or software_fields["business_reason"]
+    )
+    if software_request_started and not all(software_fields.values()):
         return {"error": "To request software, provide all three fields in this format: Application: <name>; Business reason: <reason>; Device: <device name>."}
 
-    if all(software_fields.values()):
+    if software_request_started and all(software_fields.values()):
         problem = f"Software installation request for {software_fields['application_name']}"
         title = f"Software installation: {software_fields['application_name']}"
         description = (

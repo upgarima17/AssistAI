@@ -7,6 +7,7 @@ import graph.graph as graph
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from graph.graph import support_graph
+from storage import tickets as ticket_storage
 
 
 def test_knowledge_route():
@@ -95,6 +96,28 @@ def test_extract_details_from_varied_ticket_request(monkeypatch):
     }
 
 
+def test_laptop_change_does_not_enter_software_route(monkeypatch):
+    monkeypatch.setattr(graph, "extract_structured_ticket_details_with_llm", lambda query, schema: SimpleNamespace(
+        application_name=None,
+        business_reason=None,
+        device_name="LAPTOP-1024",
+        ticket_problem="The laptop needs to be replaced",
+    ))
+    monkeypatch.setattr(graph, "find_relevant_open_ticket", lambda employee_id, problem: None)
+    monkeypatch.setattr(graph, "ticket_create", SimpleNamespace(invoke=lambda request: {
+        "created": True,
+        "ticket": {"ticket_id": "INC-LAPTOP", "status": "New", "priority": "Medium"},
+    }))
+
+    result = support_graph.invoke({
+        "user_query": "Please open a ticket for a laptop change",
+        "employee_id": "EMP1024",
+    })
+
+    assert "INC-LAPTOP" in result["response"]
+    assert result["ticket_problem"] == "The laptop needs to be replaced"
+
+
 def test_vague_follow_up_reuses_prior_ticket_details(monkeypatch):
     monkeypatch.setattr(graph, "find_relevant_open_ticket", lambda employee_id, problem: None)
     monkeypatch.setattr(graph, "ticket_create", SimpleNamespace(invoke=lambda request: {
@@ -148,3 +171,28 @@ def test_software_request_requires_all_fields():
 def test_unknown_employee_is_rejected():
     result = support_graph.invoke({"user_query": "What is my ticket status?", "employee_id": "EMP9999"})
     assert "could not verify" in result["response"]
+
+
+def test_hardware_problem_does_not_match_software_ticket(monkeypatch):
+    monkeypatch.setattr(ticket_storage, "find_tickets", lambda employee_id: [{
+        "ticket_id": "INC-1003",
+        "status": "New",
+        "title": "Software installation: Microsoft Outlook",
+        "description": "Application: Microsoft Outlook not working",
+    }])
+
+    assert ticket_storage.find_relevant_open_ticket("EMP1024", "Laptop not working") is None
+
+
+def test_different_software_applications_do_not_match(monkeypatch):
+    monkeypatch.setattr(ticket_storage, "find_tickets", lambda employee_id: [{
+        "ticket_id": "INC-1003",
+        "status": "New",
+        "title": "Software installation: Microsoft Outlook",
+        "description": "Application: Microsoft Outlook\nBusiness reason: email access\nDevice: garimaup",
+    }])
+
+    assert ticket_storage.find_relevant_open_ticket(
+        "EMP1024",
+        "Software installation request for HRWT",
+    ) is None

@@ -5,12 +5,12 @@ AssistIQ is a local agentic IT support assistant for a fictional organization. T
 ## Current capabilities
 
 - Routes requests to knowledge search, ticket lookup, ticket creation, or clarification.
-- Searches `data/knowledge_base.json` with lightweight local lexical retrieval.
+- Searches `data/knowledge_base.json` with OpenAI embeddings and a local FAISS index.
 - Verifies employees and reads or writes tickets in SQLite.
 - Preserves conversation messages and workflow state with a `thread_id`.
 - Validates ticket details and blocks similar open duplicate tickets.
-- Runs without an API key using deterministic offline responses.
-- Optionally uses `OPENAI_API_KEY` and `OPENAI_MODEL` for intent extraction and response wording.
+- Uses deterministic graph responses when no chat model is configured; the first embedding-based knowledge query requires `OPENAI_API_KEY`.
+- Optionally uses `OPENAI_MODEL` for intent extraction and response wording.
 
 ## Architecture
 
@@ -99,4 +99,4 @@ Pass the returned `thread_id` in later requests to preserve conversation state. 
 
 ## Current limitations
 
-This is production-shaped local code, not a deployed enterprise service. Embedding-based retrieval, authentication, authorization, database migrations, structured observability, broader integration coverage, retention policies, and multi-instance database support remain future hardening work.
+This is production-shaped local code, not a deployed enterprise service. Authentication, authorization, database migrations, structured observability, broader integration coverage, retention policies, and multi-instance database support remain future hardening work. The FAISS index is generated in `.assistai_faiss/` and rebuilt automatically when the knowledge-base JSON changes.
