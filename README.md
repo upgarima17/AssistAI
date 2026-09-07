@@ -2,6 +2,14 @@
 
 AssistIQ is a local agentic IT support assistant for a fictional organization. The current stage demonstrates LangGraph orchestration, deterministic tool execution, local RAG, SQLite persistence, validation, duplicate prevention, and a separate FastAPI backend with a Streamlit frontend.
 
+## Problem statement
+
+Employees need a single place to get IT troubleshooting guidance, check existing support tickets, and report new issues. The assistant must route each request correctly, use trusted local knowledge, validate employee and ticket data, and avoid creating duplicate tickets.
+
+## Solution overview
+
+AssistIQ combines a LangGraph workflow with local tools. Knowledge questions use embedding-based RAG over the local knowledge base, while employee and ticket operations use validated JSON and SQLite repositories. FastAPI exposes the backend, and Streamlit provides the user interface.
+
 ## Current capabilities
 
 - Routes requests to knowledge search, ticket lookup, ticket creation, or clarification.
@@ -11,6 +19,19 @@ AssistIQ is a local agentic IT support assistant for a fictional organization. T
 - Validates ticket details and blocks similar open duplicate tickets.
 - Uses deterministic graph responses when no chat model is configured; the first embedding-based knowledge query requires `OPENAI_API_KEY`.
 - Optionally uses `OPENAI_MODEL` for intent extraction and response wording.
+
+## Technology stack
+
+- **Python**: application language
+- **LangGraph**: workflow state, routing, and orchestration
+- **LangChain**: tool and model integration
+- **OpenAI**: chat responses and text embeddings
+- **FAISS**: local vector similarity search
+- **FastAPI and Uvicorn**: backend API and server
+- **Streamlit**: frontend interface
+- **SQLite**: tickets and conversation persistence
+- **JSON**: small, mostly static reference data
+
 
 ## Architecture
 
@@ -28,7 +49,7 @@ knowledge lookup  create  clarify
                  final answer
 ```
 
-The complete architecture diagram is avaialble at(docs/adr/ADR.md)
+The complete architecture decision record is available in [ADR-0001](docs/adr/ADR.md).
 
 ## Project layout
 
@@ -63,6 +84,19 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+## Environment variables
+
+Copy `.env.example` to `.env` and configure the following values:
+
+| Variable | Required | Purpose | Default |
+|---|---|---|---|
+| `OPENAI_API_KEY` | Yes for embeddings; optional for LLM responses | Authenticates OpenAI embedding and chat requests | None |
+| `OPENAI_MODEL` | No | Chat model used for intent and response wording | `gpt-4o-mini` |
+| `OPENAI_EMBEDDING_MODEL` | No | Embedding model used by the FAISS index | `text-embedding-3-small` |
+| `RAG_SCORE_THRESHOLD` | No | Maximum FAISS distance accepted as a relevant result | `1.2` |
+
+The first embedding-based knowledge search requires network access and `OPENAI_API_KEY`. If no chat model is available, the application uses deterministic response logic.
+
 Start the backend in one terminal:
 
 ```powershell
@@ -90,6 +124,40 @@ Pass the returned `thread_id` in later requests to preserve conversation state. 
 - `How do I reset my VPN password?`
 - Set employee ID to `EMP1024`, then ask `What is the status of my laptop issue?`
 - Set employee ID to `EMP1024`, then ask `Please raise a ticket: my monitor is flickering and unusable`
+
+## Sample outputs
+
+Knowledge search:
+
+```text
+Reset your VPN password (KB-001)
+
+Open the AssistIQ VPN portal, choose Forgot password, verify with your employee ID, and set a new password.
+```
+
+Ticket lookup:
+
+```text
+Here are the matching tickets:
+- TICKET-1001: Laptop will not start - Open (High)
+```
+
+Ticket creation:
+
+```text
+Ticket TICKET-1003 created successfully. Status: Open; priority: Medium.
+```
+
+## Key design decisions
+
+- LangGraph owns routing and workflow state, while tools own their storage operations.
+- RAG is used for unstructured IT guidance; structured ticket and employee operations do not use semantic search.
+- JSON is used for small reference data, while SQLite handles changing ticket and conversation data transactionally.
+- FastAPI and Streamlit communicate through an API boundary so the frontend and backend can evolve independently.
+- Ticket creation validates employees, requires meaningful details, and blocks similar open tickets.
+- The FAISS index is persisted locally and rebuilt when the knowledge base or embedding model changes.
+
+More detail is available in [ADR-0001](docs/adr/ADR.md).
 
 ## Documentation
 

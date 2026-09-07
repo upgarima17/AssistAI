@@ -16,5 +16,11 @@
     "title": "Request a software installation",
     "keywords": ["software", "install", "application", "app", "program"],
     "content": "Submit a ticket with the application name, business reason, and device name. IT will review the request and confirm licensing requirements."
+  },
+  {
+    "id": "KB-004",
+    "title": "Connect to the company network from home",
+    "keywords": ["home", "remote", "vpn", "network", "remote access", "work from home", "connect"],
+    "content": "To access the company network from home, connect your device to the internet, open the AssistIQ VPN application, sign in with your organization credentials, and select Connect. Wait for the VPN to show that you are connected before opening internal systems. If the VPN connection fails, verify your password, restart the VPN application, and contact the IT Service Desk if the problem continues."
   }
 ]

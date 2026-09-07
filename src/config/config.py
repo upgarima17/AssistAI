@@ -15,7 +15,7 @@ CONFIG = {
     "embedding_model": "text-embedding-3-small",
     "index_dir": str(PROJECT_ROOT / ".assistai_faiss"),
     "top_k": 3,
-    "score_threshold": 1.0
+    "score_threshold": 1.2
     },
     
     "evaluation": {
