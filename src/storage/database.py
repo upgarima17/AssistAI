@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -118,7 +119,10 @@ def initialize_database() -> None:
         if ticket_count == 0 and TICKETS_SEED_PATH.exists():
             tickets = json.loads(TICKETS_SEED_PATH.read_text(encoding="utf-8"))
             ticket_rows = [
-                {**ticket, "created_at": ticket.get("created_at", "")}
+                {
+                    **ticket,
+                    "created_at": ticket.get("created_at") or datetime.now(timezone.utc).isoformat(),
+                }
                 for ticket in tickets
             ]
             if using_postgres():

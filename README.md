@@ -120,7 +120,7 @@ Use these Render commands for the combined FastAPI and Streamlit service:
 
 ```text
 Build Command: pip install -r requirements.txt
-Start Command: uvicorn api:app --app-dir src --host 127.0.0.1 --port 8000 & exec streamlit run streamlit/streamlit_app.py --server.address 0.0.0.0 --server.port $PORT --server.headless true
+Start Command: sh start_render.sh
 ```
 
 Also configure `OPENAI_API_KEY` and `ASSISTAI_API_URL=http://127.0.0.1:8000`. PostgreSQL stores tickets and conversations persistently; the local FAISS index can be rebuilt after a service restart.
