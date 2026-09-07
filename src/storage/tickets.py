@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import re
 from typing import Any
 
-from .database import get_connection, row_to_dict
+from .database import get_connection, row_to_dict, using_postgres
 
 
 def find_tickets(employee_id: str, ticket_id: str = "", query: str = "") -> list[dict[str, Any]]:
@@ -14,12 +14,20 @@ def find_tickets(employee_id: str, ticket_id: str = "", query: str = "") -> list
     normalized_ticket = ticket_id.strip().upper()
     query_value = f"%{query.strip()}%"
     with get_connection() as connection:
+        if using_postgres():
+            statement = """SELECT * FROM tickets
+                WHERE (%s != '' AND employee_id = %s)
+                    OR (%s != '' AND ticket_id = %s)
+                    OR (%s != '' AND title ILIKE %s)
+               ORDER BY created_at DESC"""
+        else:
+            statement = """SELECT * FROM tickets
+                WHERE (? != '' AND employee_id = ?)
+                    OR (? != '' AND ticket_id = ?)
+                    OR (? != '' AND title LIKE ? COLLATE NOCASE)
+               ORDER BY created_at DESC"""
         rows = connection.execute(
-                """SELECT * FROM tickets
-                    WHERE (? != '' AND employee_id = ?)
-                        OR (? != '' AND ticket_id = ?)
-                        OR (? != '' AND title LIKE ? COLLATE NOCASE)
-               ORDER BY created_at DESC""",
+                statement,
                 (normalized_employee, normalized_employee, normalized_ticket, normalized_ticket, query.strip(), query_value),
         ).fetchall()
     return [dict(row) for row in rows]
@@ -77,18 +85,26 @@ def create_ticket(employee_id: str, title: str, description: str, priority: str 
         return {"created": False, "error": "employee_id, title, and description are required"}
 
     with get_connection() as connection:
-        duplicate = connection.execute(
+        duplicate_query = (
             """SELECT * FROM tickets
+               WHERE employee_id = %s AND title ILIKE %s
+                 AND status NOT IN ('Resolved', 'Closed')"""
+            if using_postgres()
+            else """SELECT * FROM tickets
                WHERE employee_id = ? AND title = ? COLLATE NOCASE
-                 AND status NOT IN ('Resolved', 'Closed')""",
+                 AND status NOT IN ('Resolved', 'Closed')"""
+        )
+        duplicate = connection.execute(
+            duplicate_query,
             (normalized_employee, normalized_title),
         ).fetchone()
         if duplicate:
             return {"created": False, "duplicate": row_to_dict(duplicate)}
 
         next_number = connection.execute(
-            "SELECT COALESCE(MAX(CAST(SUBSTR(ticket_id, 5) AS INTEGER)), 1000) + 1 FROM tickets"
-        ).fetchone()[0]
+            "SELECT COALESCE(MAX(CAST(SUBSTR(ticket_id, 5) AS INTEGER)), 1000) + 1 AS next_number FROM tickets"
+        ).fetchone()
+        next_number = next_number["next_number"] if using_postgres() else next_number[0]
         ticket = {
             "ticket_id": f"INC-{next_number}",
             "employee_id": normalized_employee,

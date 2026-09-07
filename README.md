@@ -94,6 +94,7 @@ Copy `.env.example` to `.env` and configure the following values:
 | `OPENAI_MODEL` | No | Chat model used for intent and response wording | `gpt-4o-mini` |
 | `OPENAI_EMBEDDING_MODEL` | No | Embedding model used by the FAISS index | `text-embedding-3-small` |
 | `RAG_SCORE_THRESHOLD` | No | Maximum FAISS distance accepted as a relevant result | `1.2` |
+| `DATABASE_URL` | No locally; required for PostgreSQL deployment | PostgreSQL connection URL | SQLite database in `data/` |
 
 The first embedding-based knowledge search requires network access and `OPENAI_API_KEY`. If no chat model is available, the application uses deterministic response logic.
 
@@ -110,6 +111,19 @@ streamlit run streamlit/streamlit_app.py
 ```
 
 The frontend is normally available at `http://localhost:8501`. The API is available at `http://127.0.0.1:8000`, with interactive documentation at `http://127.0.0.1:8000/docs`.
+
+### Render deployment
+
+Create a Render PostgreSQL database and add its internal connection URL as `DATABASE_URL` in the web service environment variables. The application automatically uses PostgreSQL when `DATABASE_URL` is set and keeps SQLite for local development when it is absent.
+
+Use these Render commands for the combined FastAPI and Streamlit service:
+
+```text
+Build Command: pip install -r requirements.txt
+Start Command: uvicorn api:app --app-dir src --host 127.0.0.1 --port 8000 & exec streamlit run streamlit/streamlit_app.py --server.address 0.0.0.0 --server.port $PORT --server.headless true
+```
+
+Also configure `OPENAI_API_KEY` and `ASSISTAI_API_URL=http://127.0.0.1:8000`. PostgreSQL stores tickets and conversations persistently; the local FAISS index can be rebuilt after a service restart.
 
 Example API request:
 
