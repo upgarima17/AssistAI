@@ -76,54 +76,130 @@ AssistAI/
 
 ## Run locally
 
-Create and activate a virtual environment from the project root:
+### 1) Install dependencies
+
+From the project root, create a virtual environment and install the required packages.
+
+#### Windows PowerShell
 
 ```powershell
+cd path\to\AssistAI
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-## Environment variables
+#### Git Bash (Windows)
 
-Copy `.env.example` to `.env` and configure the following values:
+```bash
+cd /c/path/to/AssistAI
+python -m venv .venv
+source .venv/Scripts/activate
+pip install -r requirements.txt
+```
+
+#### Linux / macOS
+
+```bash
+cd /path/to/AssistAI
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 2) Set environment variables
+
+Create a local environment file:
+
+```bash
+cp .env.example .env
+```
+
+Then update `.env` with the values you need:
 
 | Variable | Required | Purpose | Default |
 |---|---|---|---|
-| `OPENAI_API_KEY` | Yes for embeddings; optional for LLM responses | Authenticates OpenAI embedding and chat requests | None |
-| `OPENAI_MODEL` | No | Chat model used for intent and response wording | `gpt-4o-mini` |
+| `OPENAI_API_KEY` | Yes for embeddings and LLM calls | Authenticates OpenAI requests | None |
+| `OPENAI_MODEL` | No | Chat model used for routing and response wording | `gpt-4o-mini` |
 | `OPENAI_EMBEDDING_MODEL` | No | Embedding model used by the FAISS index | `text-embedding-3-small` |
-| `RAG_SCORE_THRESHOLD` | No | Maximum FAISS distance accepted as a relevant result | `1.2` |
-| `DATABASE_URL` | No locally; required for PostgreSQL deployment | PostgreSQL connection URL | SQLite database in `data/` |
+| `RAG_SCORE_THRESHOLD` | No | Maximum FAISS relevance distance | `1.0` |
+| `DATABASE_URL` | No locally; required for PostgreSQL deployment | PostgreSQL connection URL | SQLite in `data/` |
 
-The first embedding-based knowledge search requires network access and `OPENAI_API_KEY`. If no chat model is available, the application uses deterministic response logic.
+The first knowledge lookup requires an OpenAI embedding request, so `OPENAI_API_KEY` should be set before the first RAG search. If no model is configured, the app falls back to deterministic logic.
+
+### 3) Start the app
+
+#### Option A: One-click startup on Windows
+
+Run the included launcher from the project root:
+
+```powershell
+start_windows.bat
+```
+
+Or double-click `start_windows.bat` in Windows Explorer.
+
+This script creates a local `.venv` if needed, installs dependencies, and starts:
+
+- FastAPI backend: `http://127.0.0.1:8000`
+- Streamlit UI: `http://localhost:8501`
+
+#### Option B: Manual startup in two terminals
 
 Start the backend in one terminal:
 
-```powershell
-uvicorn api:app --app-dir src --reload
+```bash
+uvicorn api:app --app-dir src --host 127.0.0.1 --port 8000 --reload
 ```
 
-Start the Streamlit frontend in another terminal:
+Start the frontend in a second terminal:
 
-```powershell
+```bash
 streamlit run streamlit/streamlit_app.py
 ```
 
-The frontend is normally available at `http://localhost:8501`. The API is available at `http://127.0.0.1:8000`, with interactive documentation at `http://127.0.0.1:8000/docs`.
+#### Option C: Linux / Git Bash launch
 
-### Render deployment
+From the project root:
 
-Create a Render PostgreSQL database and add its internal connection URL as `DATABASE_URL` in the web service environment variables. The application automatically uses PostgreSQL when `DATABASE_URL` is set and keeps SQLite for local development when it is absent.
+```bash
+export PORT=8501
+./start_render.sh
+```
 
-Use these Render commands for the combined FastAPI and Streamlit service:
+In Git Bash on Windows, use:
+
+```bash
+export PORT=8501
+bash ./start_render.sh
+```
+
+This script starts the API and Streamlit together for a local Linux-like environment.
+
+The frontend is normally available at `http://localhost:8501`. The API is available at `http://127.0.0.1:8000`, with interactive API docs at `http://127.0.0.1:8000/docs`.
+
+## Deployment
+
+The project is live at:
+
+https://assistiq-7s93.onrender.com/
+
+For Render, use the startup script and set the port before launch:
 
 ```text
 Build Command: pip install -r requirements.txt
-Start Command: sh start_render.sh
+Start Command: PORT=8501 sh start_render.sh
 ```
 
-Also configure `OPENAI_API_KEY` and `ASSISTAI_API_URL=http://127.0.0.1:8000`. PostgreSQL stores tickets and conversations persistently; the local FAISS index can be rebuilt after a service restart.
+Also configure the following service environment variables in Render:
+
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL`
+- `OPENAI_EMBEDDING_MODEL`
+- `RAG_SCORE_THRESHOLD`
+- `DATABASE_URL` (optional, for persistent PostgreSQL storage)
+
+When `DATABASE_URL` is present, the app automatically uses PostgreSQL. Without it, local development continues with the SQLite database in `data/`.
 
 Example API request:
 
@@ -138,6 +214,7 @@ Pass the returned `thread_id` in later requests to preserve conversation state. 
 - `How do I reset my VPN password?`
 - Set employee ID to `EMP1024`, then ask `What is the status of my laptop issue?`
 - Set employee ID to `EMP1024`, then ask `Please raise a ticket: my monitor is flickering and unusable`
+- Without setting employee ID - Just ask `Tell me about my ticket status` Agent will proceed with asking employee Id , caht with it for Ticket Status,Ticket Creation or any regular issue you are facing like `My Vpn is not working`
 
 ## Sample outputs
 
@@ -152,14 +229,27 @@ Open the AssistIQ VPN portal, choose Forgot password, verify with your employee 
 Ticket lookup:
 
 ```text
-Here are the matching tickets:
-- TICKET-1001: Laptop will not start - Open (High)
+I found a ticket for employee ID EMP2048. Here are the details:
+
+Ticket ID: INC-1002
+Title: VPN access issue
+Description: VPN disconnects during sign-in.
+Status: Waiting for user
+Priority: Medium
+If you need further assistance, feel free to ask!pen (High)
 ```
 
 Ticket creation:
 
 ```text
-Ticket TICKET-1003 created successfully. Status: Open; priority: Medium.
+ ticket has been successfully created for the laptop not starting issue. Here are the details:
+
+Ticket ID: INC-1005
+Title: Laptop not starting
+Description: Laptop not starting
+Status: New
+Priority: Medium
+Created At: September 9, 2026
 ```
 
 ## Key design decisions

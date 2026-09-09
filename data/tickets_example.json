@@ -1,4 +1,7 @@
 [
   {"ticket_id": "INC-1001", "employee_id": "EMP1024", "title": "Laptop will not start", "description": "Laptop shows a blank screen after power on.", "status": "In progress", "priority": "High"},
-  {"ticket_id": "INC-1002", "employee_id": "EMP2048", "title": "VPN access issue", "description": "VPN disconnects during sign-in.", "status": "Waiting for user", "priority": "Medium"}
-]
+  {"ticket_id": "INC-1002", "employee_id": "EMP2048", "title": "VPN access issue", "description": "VPN disconnects during sign-in.", "status": "Waiting for user", "priority": "Medium"},
+  {"ticket_id": "INC-1003", "employee_id": "EMP1025", "title": "Software installation error", "description": "Unable to install the latest version of the software.", "status": "Open", "priority": "Low"},
+  {"ticket_id": "INC-1004", "employee_id": "EMP2049", "title": "Email not syncing", "description": "Emails are not syncing on mobile device.", "status": "Resolved", "priority": "High"},
+  {"ticket_id": "INC-1005", "employee_id": "EMP1026", "title": "Printer not responding", "description": "Printer does not respond to print commands.", "status": "Closed", "priority": "Medium"}
+ ]

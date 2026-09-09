@@ -8,7 +8,7 @@ AssistIQ is an intelligent employee support assistant for a fictional organizati
 
 ### Modular project structure
 
-The backend files are kept directly under `src`. The Streamlit application is separate under `streamlit`.
+The backend files are kept directly under `src`, and the Streamlit application remains separate under `streamlit`. The repository also includes startup automation for local development and deployment.
 
 ```text
 AssistAI/
@@ -32,11 +32,18 @@ AssistAI/
 ├── streamlit/
 │   ├── client.py
 │   └── streamlit_app.py
+├── docs/
+│   ├── adr/
+│   ├── IMPLEMENTATION_SUMMARY.md
+│   └── LANGGRAPH_WORKFLOW.md
+├── .env.example
+├── start_windows.bat
+├── start_render.sh
 ├── tests/
-├── docs/adr/
 ├── pyproject.toml
 ├── requirements.txt
-└── README.md
+├── README.md
+└── .venv/ (local only)
 ```
 
 ### Agent workflow
@@ -73,7 +80,7 @@ The first embedding query requires network access and `OPENAI_API_KEY`; subseque
 
 `src/utils/llm.py` is the single model-loading boundary. It reads `OPENAI_API_KEY` and `OPENAI_MODEL` from `.env`, caches the configured `ChatOpenAI` client, and generates grounded response wording from verified tool results. When no key is configured or the model fails, the graph uses its deterministic response path instead.
 
-### Local persistence
+### Local persistence and deployment database support
 
 SQLite is used for data that changes during normal operation:
 
@@ -81,9 +88,9 @@ SQLite is used for data that changes during normal operation:
 - Conversation state
 - Chat messages
 
-`src/storage/database.py` creates the schema and seeds the initial tickets from the existing JSON file the first time the application starts. SQLite uses transactions and WAL mode, making it a safer local choice than rewriting JSON files for every ticket operation.
+`src/storage/database.py` creates the schema and seeds initial data when needed. SQLite uses transactions and WAL mode, making it a safer local choice than rewriting JSON files for every ticket operation.
 
-Employee and knowledge-base reference data remain in JSON because they are small and mostly read-only.
+Employee and knowledge-base reference data remain in JSON because they are small and mostly read-only. The project also supports an optional PostgreSQL deployment mode via `DATABASE_URL`, which is used automatically when configured in a hosted environment such as Render.
 
 ### Persistent conversation memory
 
@@ -102,23 +109,52 @@ The Streamlit application uses `streamlit/client.py` to call the API. It does no
 
 ## How To Run
 
-Install dependencies from the project root:
+### Windows: one-click startup
+
+From the project root:
 
 ```powershell
+start_windows.bat
+```
+
+This script creates a virtual environment if needed, installs dependencies, and starts both the FastAPI backend and the Streamlit frontend.
+
+### Windows PowerShell
+
+```powershell
+cd path\to\AssistAI
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+uvicorn api:app --app-dir src --host 127.0.0.1 --port 8000 --reload
 ```
 
-Start the backend in one terminal:
-
-```powershell
-uvicorn api:app --app-dir src --reload
-```
-
-Start the frontend in another terminal:
+In a second terminal:
 
 ```powershell
 streamlit run streamlit/streamlit_app.py
+```
+
+### Git Bash / Linux
+
+```bash
+cd /path/to/AssistAI
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+export PORT=8501
+./start_render.sh
+```
+
+For Git Bash on Windows:
+
+```bash
+cd /c/path/to/AssistAI
+python -m venv .venv
+source .venv/Scripts/activate
+pip install -r requirements.txt
+export PORT=8501
+bash ./start_render.sh
 ```
 
 The Streamlit UI is normally available at `http://localhost:8501`. The API documentation is available at `http://127.0.0.1:8000/docs`.
@@ -136,15 +172,16 @@ The Streamlit UI is normally available at `http://localhost:8501`. The API docum
 
 ## Current Limitations
 
-This is production-shaped local code, not a deployed enterprise service. The following work remains for external deployment:
+This is production-shaped local code, and the project now also includes a live hosted deployment. The following work remains for hardening and wider production use:
 
-- Replace lexical retrieval with embedding-based retrieval and evaluate its quality.
-- Add database migrations instead of startup-only schema creation.
 - Add authentication and authorization.
+- Add database migrations instead of startup-only schema creation.
 - Add structured logging, metrics, and request IDs.
 - Add stronger API and integration test coverage.
 - Add retention and deletion policies for conversation data.
-- Use a shared database for multi-instance deployment.
+- Use a shared database for multi-instance deployment beyond the current local and Render-based demo setup.
+
+The project is currently available at https://assistiq-7s93.onrender.com/.
 
 ## Related Decision
 

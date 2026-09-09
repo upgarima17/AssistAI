@@ -1,4 +1,11 @@
 [
   {"employee_id": "EMP1024", "name": "Jordan Lee", "department": "Operations"},
-  {"employee_id": "EMP2048", "name": "Priya Shah", "department": "Finance"}
+  {"employee_id": "EMP2048", "name": "Priya Shah", "department": "Finance"},
+  {"employee_id": "EMP1025", "name": "Garima Upadhyay", "department": "IT"},
+  {"employee_id": "EMP2049", "name": "Swati Gupta", "department": "Marketing"},
+  {"employee_id": "EMP1026", "name": "Ravi Kumar", "department": "Operations"},
+  {"employee_id": "EMP2050", "name": "Ananya Singh", "department": "Finance"},
+  {"employee_id": "EMP1027", "name": "Amit Patel", "department": "Marketing"},
+  {"employee_id": "EMP2051", "name": "Sanjay Mehta", "department": "Operations"}
+
 ]
