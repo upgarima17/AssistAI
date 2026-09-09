@@ -10,6 +10,13 @@ CONFIG = {
     "openai_model": "gpt-4o-mini",
     "temperature": 0.3
     },
+
+    "rag": {
+    "embedding_model": "text-embedding-3-small",
+    "index_dir": str(PROJECT_ROOT / ".assistai_faiss"),
+    "top_k": 3,
+    "score_threshold": 1.2
+    },
     
     "evaluation": {
     "criteria": [
