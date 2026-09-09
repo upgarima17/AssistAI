@@ -8,7 +8,11 @@ from typing import Any
 import requests
 
 
-API_URL = os.getenv("ASSISTAI_API_URL", "http://127.0.0.1:8000")
+API_URL = (
+    os.getenv("ASSISTAI_API_URL")
+    or os.getenv("BACKEND_API_URL")
+    or "http://127.0.0.1:8000"
+).rstrip("/")
 
 
 def send_message(message: str, thread_id: str | None, employee_id: str) -> dict[str, Any]:
